@@ -1,4 +1,4 @@
-source("helper_functions.R")
+source("00_helper_functions.R")
 library(tidyverse)
 library(DESeq2)
 library(edgeR)
@@ -21,46 +21,38 @@ Fischer_df <- read.table("InputTables/Fischer_counts_table.txt", skip=1, header=
 row.names(Fischer_df) <- Fischer_df$Geneid
 Fischer_df <- t(Fischer_df[, 7:dim(Fischer_df)[2]])
 
+# Load Fischer metadata
+Fischer_metadata <- read.table("InputTables/Metadata_RNAseq_cohesin_AML.inclQC.txt",
+                                 sep = "\t", header = T)
+Fischer_metadata$Sample_Name <- sapply(strsplit(Fischer_metadata$Sample_Name, "_"), function(parts) {
+  paste(tail(parts, 2), collapse = "_")})
+row.names(Fischer_metadata) <- Fischer_metadata$Sample_Name
 
-# Plot mutants proportions =====================================
-cohesin_tab <- as.data.frame(table(TCGA_BEAT_mut_table$Cohesin))
-colnames(cohesin_tab) <- c("Cohesin", "Count")
-ggplot(cohesin_tab, aes(x = "", y = Count, fill = Cohesin)) +
-  geom_col(width = 1, color = "white") +
-  geom_text(aes(label = Count), position = position_stack(vjust = 0.5), color = "black") +
-  coord_polar(theta = "y") +
-  labs(title="Cohesin mutant and WT AML in TCGA-BEAT samples") +
-  theme_void() +
-  theme(panel.background = element_rect(fill = "white", color = NA),
-        plot.background = element_rect(fill = "white", color = NA))
-# ggsave("plots/proportions_TCGA_BEAT.png", device="png", units="cm", dpi=500,
-#        width=15, height=12)
+# Fix Fischer_df sample names
+row.names(Fischer_df) <- sapply(strsplit(row.names(Fischer_df), "\\."), function(parts) {
+  id <- sub("_.*", "", parts[2])
+  hits <- grep(id, Fischer_metadata$Sample_Name)
+  return(Fischer_metadata$Sample_Name[hits])})
 
-# Set labels
+# Set Fischer_df to the metadata order
+Fischer_df <- Fischer_df[Fischer_metadata$Sample_Name,]
+# write.table(t(Fischer_df), "InputTables/Fischer_counts_table_raw.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+
+# Get labels for the samples ======================================
+# Set labels for TCGA-BEAT data
 TCGA_BEAT_labels_df <- data.frame(sample=row.names(TCGA_BEAT_mut_table),
                                   label=c(ifelse(TCGA_BEAT_mut_table$Cohesin=="Mutant", "cohesinAML", "wtAML")))
 table(TCGA_BEAT_labels_df$label)
 # write.table(TCGA_BEAT_labels_df, "InputTables/TCGA_BEAT_labels.txt",
 #             row.names = F, quote = F, sep = "\t")
 
-
-# Change Fischer sample names =====================================
-sample_guide <- read.csv('InputTables/SampleGuide.csv', header=F)
-sample_guide.names <- sapply(strsplit(sample_guide$V2, "_"), function(parts) {
-  paste(tail(parts, 2), collapse = "_")
-})
-
-Fischer.row.names <- sapply(strsplit(row.names(Fischer_df), "\\."), function(parts) {
-  parts[2]})
-Fischer.row.names <- sub("_.*", "", Fischer.row.names)
-
-newcol.names <- sapply(Fischer.row.names, function(name) {
-  match <- sample_guide.names[grep(name, sample_guide.names)]
-  if (length(match) > 0) {
-    match[1]
-  }
-})
-row.names(Fischer_df) <- newcol.names
+# Set labels for Fischer data
+Fischer_labels_df <- data.frame(sample=row.names(Fischer_metadata),
+                                label=c(ifelse(Fischer_metadata$cohesin_mut_type=="", "wtAML", "cohesinAML")))
+table(Fischer_labels_df$label)
+# write.table(Fischer_labels_df, "InputTables/Fischer_labels.txt",
+#             row.names = F, quote = F, sep = "\t")
 
 
 # Select Genes in all datasets ===========================
@@ -81,7 +73,38 @@ keep <- colnames(TCGA_BEAT_df) %in% colnames(Fischer_df)
 TCGA_BEAT_df <- TCGA_BEAT_df[, keep]
 
 
-# Remove DEGenes between Databases =======================
+# Plot mutants proportions =====================================
+## TCGA-BEAT
+cohesin_tab <- as.data.frame(table(TCGA_BEAT_mut_table$Cohesin))
+colnames(cohesin_tab) <- c("Cohesin", "Count")
+ggplot(cohesin_tab, aes(x = "", y = Count, fill = Cohesin)) +
+  geom_col(width = 1, color = "white") +
+  geom_text(aes(label = Count), position = position_stack(vjust = 0.5), color = "black") +
+  coord_polar(theta = "y") +
+  labs(title="Cohesin mutant and WT AML in TCGA-BEAT samples") +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA))
+# ggsave("plots/Cohesin_mut_proportions_TCGA_BEAT.png", device="png",
+#        units="cm", dpi=500, width=15, height=12)
+
+## Fischer
+Fischer_coh_mut <- ifelse(Fischer_metadata$cohesin_mut_type=="", "WT", "Mutant")
+cohesin_tab <- as.data.frame(table(Fischer_coh_mut))
+colnames(cohesin_tab) <- c("Cohesin", "Count")
+ggplot(cohesin_tab, aes(x = "", y = Count, fill = Cohesin)) +
+  geom_col(width = 1, color = "white") +
+  geom_text(aes(label = Count), position = position_stack(vjust = 0.5), color = "black") +
+  coord_polar(theta = "y") +
+  labs(title="Cohesin mutant and WT AML in Fischer samples") +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA))
+# ggsave("plots/Cohesin_mut_proportions_Fischer.png", device="png",
+#        units="cm", dpi=500, width=15, height=12)
+
+
+# Remove DEGenes between TCGA and BEAT Databases =======================
 dds <- DESeqDataSetFromMatrix(countData = t(TCGA_BEAT_df),
                               colData = TCGA_BEAT_mut_table,
                               design = ~ Database)
@@ -93,10 +116,14 @@ keep <-filterByExpr(dds)
 dds <- dds[keep,]
 dim(dds)
 # saveRDS(dds, file = "OutputTables/TCGA-BEAT_raw_DESeqDF_filterByExpr_byDatabase.rds")
+
 dds <- readRDS("OutputTables/TCGA-BEAT_raw_DESeqDF_filterByExpr_byDatabase.rds")
 
 # Normalize
 rld <- vst(dds)
+# saveRDS(rld, file = "OutputTables/TCGA-BEAT_raw_DESeq2rld_vst_filterByExpr_byDatabase.rds")
+# write.table(as.data.frame(assay(rld)), "InputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst.txt", 
+#             row.names = T, col.names = T, quote = F, sep = "\t")
 
 # Check PCA
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
@@ -105,26 +132,27 @@ plotPCA.DESeqTransform(rld, intgroup="Database") +
   labs(color="Database:") +
   scale_colour_manual(values = cols) +
   theme(legend.position = "right")
-# ggsave("plots/PCA_TCGA_BEAT_raw.png", device = "png", width = 12, height = 12,
+# ggsave("plots/PCA_TCGA_BEAT_vst_raw.png", device = "png", width = 12, height = 12,
 #        units = "cm", pointsize = 10, dpi = 500)
 
 # Get the DEGenes
-res.vol<-as.data.frame(results(dds, contrast=c("Database", "TCGA", "BEAT")))
-res.vol$Gene_ID<-rownames(res.vol)
+res.vol <- as.data.frame(results(dds, contrast=c("Database", "TCGA", "BEAT")))
+res.vol$Gene_ID <- rownames(res.vol)
 res.vol <- res.vol %>% 
   mutate(condition = if_else(log2FoldChange>2 & padj < 0.0005, 'UP',
                              if_else(log2FoldChange < -2 & padj < 0.0005, 'DOWN', 'UNCHANGED')))
 summary(is.na(res.vol))
 res.vol$condition <- as.factor(res.vol$condition)
 summary(res.vol$condition)
-# write.table(res.vol, "OutputTables/DE_genes_filterByExpr_by_Database_TCGA_BEAT.txt", col.names = T, row.names = T, sep = "\t", quote = F)
+# write.table(res.vol, "OutputTables/DE_genes_filterByExpr_by_Database_TCGA_BEAT.txt",
+#             col.names = T, row.names = T, sep = "\t", quote = F)
 
 # Volcano plot of the DEGenes
 cols <- c("UP" = "indianred3", "DOWN" = "royalblue3", "UNCHANGED" = "grey80")
 ggplot(res.vol, aes(y = -log10(padj), x = log2FoldChange, col = as.factor(condition))) + 
   geom_point(size = 0.5) + 
-  ggtitle("BEAT vs TCGA DEGenes") + 
-  labs(y = "-log10(Padj)", x = "log2FC", color = "Gene classification") +
+  labs(title="TCGA vs BEAT DEGenes",
+       y = "-log10(Padj)", x = "log2FC", color = "Gene classification") +
   scale_colour_manual(values = cols) +
   theme_classic() +
   theme(plot.title = element_text(hjust = 0, size=16, face="bold"), 
@@ -139,7 +167,7 @@ ggplot(res.vol, aes(y = -log10(padj), x = log2FoldChange, col = as.factor(condit
            size = 5, hjust = 0, color = "royalblue3", fontface="bold") +
   annotate("text", x = 5, y = 200, label = summary(res.vol$condition)[3],
            size = 5, hjust = 0, color = "indianred3", fontface="bold")
-# ggsave("plots/Volcano_plot_DEGenes_by_DATABASE.png",device="png", units = "cm",
+# ggsave("plots/Volcano_plot_vst_DEGenes_by_DATABASE.png",device="png", units = "cm",
 #        width = 10, height = 10, pointsize = 10, dpi = 500)
 
 # Filter out these DEGenes
@@ -150,13 +178,22 @@ non_DEGenes <- res.vol %>%
 keep <- rownames(rld) %in% non_DEGenes
 rld <- rld[keep,]
 
+# Save filterByExpr dataset
+Normalized_counts <- as.data.frame(assay(rld))
+# write.table(Normalized_counts, "OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst_DEGfiltered.txt", 
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+
+# Also save set of genes to be used as input
+# write.table(row.names(Normalized_counts), "OutputTables/Genes_input_filterByExpr_DEGfiltered.txt",
+#             row.names = F, col.names = F, quote = F, sep = "\t")
+
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
 plotPCA.DESeqTransform(rld, intgroup="Database") +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
   scale_colour_manual(values = cols) +
   theme(legend.position = "right")
-# ggsave("plots/PCA_TCGA_BEAT_removed_DEG.png", device = "png", width = 12, height = 12,
+# ggsave("plots/PCA_TCGA_BEAT_vst_removed_DEG.png", device = "png", width = 12, height = 12,
 #        units = "cm", pointsize = 10, dpi = 500)
 
 
@@ -180,7 +217,6 @@ summary(is.na(res.vol_rowSum))
 res.vol_rowSum$condition <- as.factor(res.vol_rowSum$condition)
 
 ## Check similarities
-common_genes <- intersect(colnames(TCGA_BEAT_df), intersect(res.vol$Gene_ID, res.vol_rowSum$Gene_ID))
 input <- list(raw_data=colnames(TCGA_BEAT_df), filterByExpr=res.vol$Gene_ID, rowSum=res.vol_rowSum$Gene_ID)
 venn.diagram(input, filename ='plots/VennDiagram_genes_filterByExpr_vs_rowSum.png', height = 2500,
              width = 2500, resolution = 500, imagetype = "tiff", units = "px", 
@@ -202,45 +238,40 @@ rownames(genes_df) <- c(""," ","  ")
 print(genes_df)
 grid.table(genes_df)
 
-## Save filterByExpr dataset
-Normalized_counts <- as.data.frame(assay(rld))
-# write.table(Normalized_counts, "OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst.txt", 
+
+# Feature Selection ==========================================
+# Correlation based 
+genes_keep <- scan("OutputTables/Genes_input_filterByExpr_DEGfiltered.txt", what = "", sep = "\n")
+TCGA_BEAT_DEGfiltered <- TCGA_BEAT_df[, genes_keep]
+dds <- DESeqDataSetFromMatrix(countData = t(TCGA_BEAT_DEGfiltered),
+                              colData = TCGA_BEAT_mut_table,
+                              design = ~ 1)
+dds <- DESeq(dds)
+rld_vst <- vst(dds, blind=T)
+Normalized_counts_vst <- as.data.frame(assay(rld_vst))
+# write.table(Normalized_counts_vst, "InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_vst_DEGfiltered.txt",
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
-
-# Correlation based Feature Selection ===================
-Normalized_counts <- t(read.table("OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst.txt",
-                                sep = "\t"))
-cor_matrix <- cor(Normalized_counts)
-to_drop <- findCorrelation(cor_matrix, cutoff = 0.8, exact  = TRUE,
-                           names  = TRUE, verbose=TRUE)
-# write.table(to_drop, "OutputTables/Genes_to_drop_by_correlation.txt",
-#             row.names = F, col.names = F, sep = "\t")
+# Correlation based Feature Selection
+cor_matrix_vst <- cor(t(Normalized_counts_vst))
+to_drop_vst <- findCorrelation(cor_matrix_vst, cutoff = 0.8, exact  = TRUE,
+                               names  = TRUE, verbose=TRUE)
+write.table(to_drop_vst, "OutputTables/Genes_to_drop_by_correlation_filterByExpr_vst.txt",
+            row.names = F, col.names = F, sep = "\t")
 
 # Eliminating highly correlated variables
-Normalized_counts_corr_filtered <- Normalized_counts[, !(colnames(Normalized_counts) %in% to_drop)]
-# write.table(t(Normalized_counts_corr_filtered), "OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst_corrFiltered.txt",
-#             row.names = T, col.names = T, quote = F, sep = "\t")
+Normalized_counts_vst_corr_filtered <- Normalized_counts_vst[, !(colnames(Normalized_counts_vst) %in% to_drop_vst)]
+write.table(t(Normalized_counts_vst_corr_filtered), "InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_vst_corrFiltered.txt",
+            row.names = T, col.names = T, quote = F, sep = "\t")
 
 # Evaluate
 cat("No of variables after setting 0.8 as correlation cut-off: ", ncol(Normalized_counts_corr_filtered),
-    "\nEliminated variables:\n", to_drop)
+    "\nEliminated variables:\n", to_drop_vst)
 
 
-# Variance based Feature Selection ==========
-variances <- data.frame(t(apply(Normalized_counts_corr_filtered, 2, var)))
+# Variance based Feature Selection
+variances <- data.frame(t(apply(Normalized_counts_vst_corr_filtered, 2, var)))
 table(variances > 0)
-
-# Check presence in Fischer =============
-table(colnames(Normalized_counts_corr_filtered) %in% colnames(Fischer_df))
-
-
-
-
-
-
-
-
 
 
 
