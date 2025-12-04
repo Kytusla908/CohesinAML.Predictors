@@ -4,4 +4,5 @@
 .Ruserdata
 *.RData
 *.rds
+*.pptx
 OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_*.txt
