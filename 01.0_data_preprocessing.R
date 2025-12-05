@@ -120,14 +120,14 @@ dim(dds)
 dds <- readRDS("OutputTables/TCGA-BEAT_raw_DESeqDF_filterByExpr_byDatabase.rds")
 
 # Normalize
-rld <- vst(dds)
-# saveRDS(rld, file = "OutputTables/TCGA-BEAT_raw_DESeq2rld_vst_filterByExpr_byDatabase.rds")
-# write.table(as.data.frame(assay(rld)), "InputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst.txt", 
+vsd <- vst(dds)
+# saveRDS(vsd, file = "OutputTables/TCGA-BEAT_raw_DESeq2vst_filterByExpr_byDatabase.rds")
+# write.table(as.data.frame(assay(vsd)), "InputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst.txt", 
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
 # Check PCA
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
-plotPCA.DESeqTransform(rld, intgroup="Database") +
+plotPCA.DESeqTransform(vsd, intgroup="Database") +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
   scale_colour_manual(values = cols) +
@@ -175,11 +175,11 @@ non_DEGenes <- res.vol %>%
   filter(condition == "UNCHANGED") %>% 
   dplyr::select(Gene_ID) %>% 
   rownames(.)
-keep <- rownames(rld) %in% non_DEGenes
-rld <- rld[keep,]
+keep <- rownames(vsd) %in% non_DEGenes
+vsd <- vsd[keep,]
 
 # Save filterByExpr dataset
-Normalized_counts <- as.data.frame(assay(rld))
+Normalized_counts <- as.data.frame(assay(vsd))
 # write.table(Normalized_counts, "OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst_DEGfiltered.txt", 
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
@@ -188,7 +188,7 @@ Normalized_counts <- as.data.frame(assay(rld))
 #             row.names = F, col.names = F, quote = F, sep = "\t")
 
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
-plotPCA.DESeqTransform(rld, intgroup="Database") +
+plotPCA.DESeqTransform(vsd, intgroup="Database") +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
   scale_colour_manual(values = cols) +
@@ -247,8 +247,9 @@ dds <- DESeqDataSetFromMatrix(countData = t(TCGA_BEAT_DEGfiltered),
                               colData = TCGA_BEAT_mut_table,
                               design = ~ 1)
 dds <- DESeq(dds)
-rld_vst <- vst(dds, blind=T)
-Normalized_counts_vst <- as.data.frame(assay(rld_vst))
+vsd <- vst(dds, blind=T)
+# saveRDS(vsd, file = "OutputTables/Input_TCGA-BEAT_raw_DESeq2_vst_filterByExpr_by1.rds")
+Normalized_counts_vst <- as.data.frame(assay(vsd))
 # write.table(Normalized_counts_vst, "InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_vst_DEGfiltered.txt",
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
@@ -256,13 +257,13 @@ Normalized_counts_vst <- as.data.frame(assay(rld_vst))
 cor_matrix_vst <- cor(t(Normalized_counts_vst))
 to_drop_vst <- findCorrelation(cor_matrix_vst, cutoff = 0.8, exact  = TRUE,
                                names  = TRUE, verbose=TRUE)
-write.table(to_drop_vst, "OutputTables/Genes_to_drop_by_correlation_filterByExpr_vst.txt",
-            row.names = F, col.names = F, sep = "\t")
+# write.table(to_drop_vst, "OutputTables/Genes_to_drop_by_correlation_filterByExpr_vst.txt",
+#             row.names = F, col.names = F, sep = "\t")
 
 # Eliminating highly correlated variables
-Normalized_counts_vst_corr_filtered <- Normalized_counts_vst[, !(colnames(Normalized_counts_vst) %in% to_drop_vst)]
-write.table(t(Normalized_counts_vst_corr_filtered), "InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_vst_corrFiltered.txt",
-            row.names = T, col.names = T, quote = F, sep = "\t")
+Normalized_counts_vst_corr_filtered <- Normalized_counts_vst[!(row.names(Normalized_counts_vst) %in% to_drop_vst),]
+# write.table(Normalized_counts_vst_corr_filtered, "InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_vst_corrFiltered.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
 
 # Evaluate
 cat("No of variables after setting 0.8 as correlation cut-off: ", ncol(Normalized_counts_corr_filtered),
@@ -270,7 +271,7 @@ cat("No of variables after setting 0.8 as correlation cut-off: ", ncol(Normalize
 
 
 # Variance based Feature Selection
-variances <- data.frame(t(apply(Normalized_counts_vst_corr_filtered, 2, var)))
+variances <- data.frame(t(apply(Normalized_counts_vst_corr_filtered, 1, var)))
 table(variances > 0)
 
 
