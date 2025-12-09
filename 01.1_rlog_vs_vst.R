@@ -22,13 +22,15 @@ rld <- readRDS("OutputTables/TCGA-BEAT_raw_DESeq2_rlog_filterByExpr_byDatabase.r
 # Check PCA
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
 plotPCA.DESeqTransform(rld, intgroup="Database") +
-  coord_cartesian(xlim = c(-100, 20), ylim = c(-50,100)) +
+  coord_cartesian(xlim = c(-100, 10), ylim = c(-30,100)) +
   # geom_text(aes(label = name), vjust = -0.5, size = 3) +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
   scale_colour_manual(values = cols) +
   theme(legend.position = "right")
-# ggsave("plots/PCA_TCGA_BEAT_rlog_raw.png", device = "png", width = 12, height = 12,
+# ggsave("plots/PCA_TCGA_BEAT_rlog_raw.png", device = "png", width = 30, height = 14,
+#        units = "cm", pointsize = 10, dpi = 500)
+# ggsave("plots/PCA_TCGA_BEAT_rlog_raw_zoomIn.png", device = "png", width = 12, height = 12,
 #        units = "cm", pointsize = 10, dpi = 500)
 
 # Read DEGenes
@@ -49,14 +51,16 @@ Normalized_counts_rlog <- as.data.frame(assay(rld))
 
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
 plotPCA.DESeqTransform(rld, intgroup="Database") +
-  coord_cartesian(xlim = c(-100, 20), ylim = c(-50,100)) +
+  coord_cartesian(xlim = c(-100, 10), ylim = c(-30,100)) +
   # geom_text(aes(label = name), vjust = -0.5, size = 3) +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
   scale_colour_manual(values = cols) +
   theme(legend.position = "right")
-# ggsave("plots/PCA_TCGA_BEAT_rlog_removed_DEG.png", device = "png", width = 12, height = 12,
+# ggsave("plots/PCA_TCGA_BEAT_rlog_removed_DEG.png", device = "png", width = 30, height = 14,
 #        units = "cm", pointsize = 10, dpi = 500)
+ggsave("plots/PCA_TCGA_BEAT_rlog_removed_DEG_zoomIn.png", device = "png", width = 12, height = 12,
+       units = "cm", pointsize = 10, dpi = 500)
 
 
 # rlog Feature Selection =====================================
@@ -73,7 +77,7 @@ dds <- DESeqDataSetFromMatrix(countData = TCGA_BEAT_DEGfiltered,
                               design = ~ 1)
 dds <- DESeq(dds)
 rld <- rlog(dds, blind=T)
-# saveRDS(rld_rlog, file = "OutputTables/Input_TCGA-BEAT_raw_DESeq2rld_rlog_filterByExpr_by1.rds")
+# saveRDS(rld_rlog, file = "OutputTables/Input_TCGA-BEAT_raw_DESeq2_rlog_filterByExpr_by1.rds")
 Normalized_counts_rlog <- as.data.frame(assay(rld))
 # write.table(Normalized_counts_rlog, "InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_rlog_DEGfiltered.txt",
 #             row.names = T, col.names = T, quote = F, sep = "\t")

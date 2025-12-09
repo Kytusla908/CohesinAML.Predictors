@@ -1,4 +1,5 @@
 library(ggplot2)
+library(tidyverse)
 
 plotPCA.DESeqTransform = function(object, intgroup="condition", ntop=500, returnData=F)
 {
@@ -38,4 +39,16 @@ plotPCA.DESeqTransform = function(object, intgroup="condition", ntop=500, return
     xlab(paste0("PC1: ",round(percentVar[1] * 100),"% variance")) + 
     ylab(paste0("PC2: ",round(percentVar[2] * 100),"% variance")) +
     coord_fixed() + theme_bw()
+}
+
+# Min-Max scaling function
+min_max <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
+}
+
+# Convert matrices to long format with a label
+make_long <- function(mat, label){
+  as.data.frame(mat) %>%
+    pivot_longer(cols = everything(), names_to = "Sample", values_to = "Value") %>%
+    mutate(Transformation = label)
 }

@@ -128,11 +128,14 @@ vsd <- vst(dds)
 # Check PCA
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
 plotPCA.DESeqTransform(vsd, intgroup="Database") +
+  # geom_text(aes(label = name), vjust = -0.5, size = 3) +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
   scale_colour_manual(values = cols) +
   theme(legend.position = "right")
 # ggsave("plots/PCA_TCGA_BEAT_vst_raw.png", device = "png", width = 12, height = 12,
+#        units = "cm", pointsize = 10, dpi = 500)
+# ggsave("plots/PCA_TCGA_BEAT_vst_raw_with_labels.png", device = "png", width = 40, height = 27,
 #        units = "cm", pointsize = 10, dpi = 500)
 
 # Get the DEGenes

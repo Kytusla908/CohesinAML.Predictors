@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 *.RData
-*.rds
 *.pptx
+TCGA-BEAT_raw_DESeqDF_filterByExpr_byDatabase.rds
 OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_*.txt
+InputTables/Input_*.txt
