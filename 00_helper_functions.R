@@ -1,5 +1,6 @@
 library(ggplot2)
 library(tidyverse)
+library(pROC)
 
 plotPCA.DESeqTransform = function(object, intgroup="condition", ntop=500, returnData=F)
 {
@@ -51,4 +52,43 @@ make_long <- function(mat, label){
   as.data.frame(mat) %>%
     pivot_longer(cols = everything(), names_to = "Sample", values_to = "Value") %>%
     mutate(Transformation = label)
+}
+
+# Helper function to check performance
+get_performance <- function(model, test_data, test_labels, plot_title="ROC Curve") {
+  # Predictions
+  preds <- predict(model, newdata = test_data)
+  probs <- predict(model, newdata = test_data, type = "prob")
+  
+  # Extract positive-class probability
+  prob_pos <- probs[, "cohesinAML"]
+  
+  # ROC and AUC
+  roc_obj <- roc(response = test_labels, predictor = prob_pos,
+                 levels = c("wtAML", "cohesinAML"), direction = "<")
+  auc_value <- auc(roc_obj)
+  roc_df <- data.frame(fpr = 1 - roc_obj$specificities,
+                       tpr = roc_obj$sensitivities)
+  
+  # ROC curve
+  roc_plot <- ggplot(roc_df, aes(x = fpr, y = tpr)) +
+    geom_line(size = 1.2, color = "blue") +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray") +
+    labs(title = plot_title, x = "False Positive Rate", y = "True Positive Rate") +
+    annotate("text", x = 0.9, y = 0.05, label = paste0("AUC = ", round(auc_value, 3)),
+             size = 5, color = "black") +
+    theme_minimal()
+  print(roc_plot)
+  
+  # Confusion matrix
+  cm <- confusionMatrix(preds, test_labels)
+  print(cm)
+  
+  # Return everything
+  return(list(
+    predicted_classes = preds,
+    predicted_probabilities = prob_pos,
+    auc = auc_value,
+    roc_plot = roc_plot,
+    confusion_matrix = cm))
 }
