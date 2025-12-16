@@ -55,7 +55,7 @@ table(Fischer_labels_df$label)
 #             row.names = F, quote = F, sep = "\t")
 
 
-# Select Genes in all datasets ===========================
+# Select Genes in both datasets ===========================
 common_genes_table <- as.data.frame(table(colnames(TCGA_BEAT_df) %in% colnames(Fischer_df)))
 colnames(common_genes_table) <- c("Common", "Count")
 ggplot(common_genes_table, aes(x = "", y = Count, fill = Common)) +
@@ -71,6 +71,8 @@ ggplot(common_genes_table, aes(x = "", y = Count, fill = Common)) +
 
 keep <- colnames(TCGA_BEAT_df) %in% colnames(Fischer_df)
 TCGA_BEAT_df <- TCGA_BEAT_df[, keep]
+# write.table(TCGA_BEAT_df, "InputTables/Input_TCGA-BEAT_raw_counts_common_genes.txt",
+#             row.names = TRUE, col.names = TRUE, sep="\t")
 
 
 # Plot mutants proportions =====================================
