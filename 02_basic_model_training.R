@@ -19,7 +19,7 @@ rlog_QN <- read.table("InputTables/Input_TCGA-BEAT_rlog_QN.txt", header=T)
 
 
 # Load labels =================================
-TCGA_BEAT_labels <- read.table("InputTables/TCGA_BEAT_labels.txt", header=T)
+TCGA_BEAT_labels <- read.table("InputTables/TCGA_BEAT_cohesin_labels.txt", header=T)
 TCGA_BEAT_labels <- c(TCGA_BEAT_labels$label)
 
 
@@ -53,7 +53,7 @@ p_train + p_test + plot_layout(guides = "collect") & theme(legend.position = "ri
 #        units = "cm", pointsize = 10, dpi = 500)
 
 # Save train indexes
-# write.table(train_index, "InputTables/Input_train_indexes.txt",
+# write.table(train_index, "InputTables/TCGA_BEAT_labels_cohesin.txt",
 #             row.names=F, col.names=F)
 
 # Subset train data
@@ -344,6 +344,7 @@ for (model_name in names(all_models)){
   model <- all_models[[model_name]]
   test_data <- test_data_map[[model_name]]
   performance <- get_performance(model, test_data, y_test,
+                                 classes = c("cohesinAML", "wtAML"),
                                  plot_title = paste0(model_name, " model ROC curve"))
   
   # Extract metrics from confusion matrix
