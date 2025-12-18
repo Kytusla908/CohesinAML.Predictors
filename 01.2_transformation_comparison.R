@@ -10,10 +10,7 @@ vst_transformed <- t(read.table("InputTables/Input_NormalizedCounts_TCGA-BEAT_fi
 rlog_transformed <- t(read.table("InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_rlog_corrFiltered.txt", header=T))
 
 # Load and filter raw_counts
-raw_counts <- t(read.table("InputTables/TCGA-BEAT_raw_counts.txt", sep="\t", header=T))
-TCGA_BEAT_mut_table <- read.table("InputTables/TCGA_BEAT_ALL_mutation_table.txt", sep="\t", header=T)
-TCGA_BEAT_mut_table <- subset(TCGA_BEAT_mut_table, TCGA_BEAT_mut_table$Disease == "AML")
-raw_counts <- raw_counts[row.names(TCGA_BEAT_mut_table),]
+raw_counts <- read.table("InputTables/Input_TCGA-BEAT_raw_counts_common_genes.txt", sep="\t", header=T)
 
 # check cohesin genes presence
 cohesin_genes <- c("STAG2", "STAG1", "SMC3", "SMC1A", "RAD21", "WAPL", "PDS5B", "PDS5A")

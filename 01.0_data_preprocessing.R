@@ -40,18 +40,10 @@ Fischer_df <- Fischer_df[Fischer_metadata$Sample_Name,]
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
 # Get labels for the samples ======================================
-# Set labels for TCGA-BEAT data
 TCGA_BEAT_labels_df <- data.frame(sample=row.names(TCGA_BEAT_mut_table),
                                   label=c(ifelse(TCGA_BEAT_mut_table$Cohesin=="Mutant", "cohesinAML", "wtAML")))
 table(TCGA_BEAT_labels_df$label)
-# write.table(TCGA_BEAT_labels_df, "InputTables/TCGA_BEAT_labels.txt",
-#             row.names = F, quote = F, sep = "\t")
-
-# Set labels for Fischer data
-Fischer_labels_df <- data.frame(sample=row.names(Fischer_metadata),
-                                label=c(ifelse(Fischer_metadata$cohesin_mut_type=="", "wtAML", "cohesinAML")))
-table(Fischer_labels_df$label)
-# write.table(Fischer_labels_df, "InputTables/Fischer_labels.txt",
+# write.table(TCGA_BEAT_labels_df, "InputTables/TCGA_BEAT_cohesin_labels.txt",
 #             row.names = F, quote = F, sep = "\t")
 
 
@@ -187,10 +179,6 @@ vsd <- vsd[keep,]
 Normalized_counts <- as.data.frame(assay(vsd))
 # write.table(Normalized_counts, "OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst_DEGfiltered.txt", 
 #             row.names = T, col.names = T, quote = F, sep = "\t")
-
-# Also save set of genes to be used as input
-# write.table(row.names(Normalized_counts), "OutputTables/Genes_input_filterByExpr_DEGfiltered.txt",
-#             row.names = F, col.names = F, quote = F, sep = "\t")
 
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
 plotPCA.DESeqTransform(vsd, intgroup="Database") +

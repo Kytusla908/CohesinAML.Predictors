@@ -44,7 +44,9 @@ plotPCA.DESeqTransform = function(object, intgroup="condition", ntop=500, return
 
 # Min-Max scaling function
 min_max <- function(x) {
-  return ((x - min(x)) / (max(x) - min(x)))
+  rng <- range(x)
+  if (rng[1] == rng[2]) return(rep(0, length(x)))
+  (x - rng[1]) / diff(rng)
 }
 
 # Convert matrices to long format with a label
@@ -55,17 +57,19 @@ make_long <- function(mat, label){
 }
 
 # Helper function to check performance
-get_performance <- function(model, test_data, test_labels, plot_title="ROC Curve") {
+get_performance <- function(model, test_data, test_labels,
+                            classes=c("positive_class", "negative_class"),
+                            plot_title="ROC Curve") {
   # Predictions
   preds <- predict(model, newdata = test_data)
   probs <- predict(model, newdata = test_data, type = "prob")
   
   # Extract positive-class probability
-  prob_pos <- probs[, "cohesinAML"]
+  prob_pos <- probs[, classes[1]]
   
   # ROC and AUC
   roc_obj <- roc(response = test_labels, predictor = prob_pos,
-                 levels = c("wtAML", "cohesinAML"), direction = "<")
+                 levels = c(classes[2], classes[1]), direction = "<")
   auc_value <- auc(roc_obj)
   roc_df <- data.frame(fpr = 1 - roc_obj$specificities,
                        tpr = roc_obj$sensitivities)
@@ -77,7 +81,9 @@ get_performance <- function(model, test_data, test_labels, plot_title="ROC Curve
     labs(title = plot_title, x = "False Positive Rate", y = "True Positive Rate") +
     annotate("text", x = 0.9, y = 0.05, label = paste0("AUC = ", round(auc_value, 3)),
              size = 5, color = "black") +
-    theme_minimal()
+    theme_minimal() + 
+    theme(panel.background = element_rect(fill = "white", color = NA),
+        plot.background  = element_rect(fill = "white", color = NA))
   print(roc_plot)
   
   # Confusion matrix
