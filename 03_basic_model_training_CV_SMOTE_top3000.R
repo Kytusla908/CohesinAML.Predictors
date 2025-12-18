@@ -1,11 +1,183 @@
 source("00_helper_functions.R")
 library(tidyverse)
+library(preprocessCore)
+library(ggplot2)
+library(cowplot)
 library(caret)
 library(pROC)
 
 
-# Load data and labels ========================
-load("02_train_test_split.RData")
+# Load data ========================
+Normalized_counts_rlog_corr_filtered <- read.table("InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_rlog_corrFiltered.txt")
+Normalized_counts_vst_corr_filtered <- read.table("InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_vst_corrFiltered.txt")
+
+
+# Dim reduction by variance ===================
+cohesin_genes <- c("STAG2", "STAG1", "SMC3", "SMC1A", "RAD21", "WAPL", "PDS5B", "PDS5A")
+
+# For vst 
+variances <- apply(Normalized_counts_vst_corr_filtered, 1, var)
+table(variances > 0)
+top_variances <- variances %>%
+  enframe(name = "gene", value = "variance") %>%
+  filter(variance > 0) %>%
+  arrange(desc(variance)) %>%
+  slice_head(n = 3000)
+Normalized_counts_vst_var_filtered <- Normalized_counts_vst_corr_filtered[top_variances$gene, ]
+print("Are cohesin genes still in the vst data set?")
+cohesin_genes %in% row.names(Normalized_counts_vst_var_filtered)
+
+# For rlog
+variances <- apply(Normalized_counts_rlog_corr_filtered, 1, var)
+table(variances > 0)
+top_variances <- variances %>%
+  enframe(name = "gene", value = "variance") %>%
+  filter(variance > 0) %>%
+  arrange(desc(variance)) %>%
+  slice_head(n = 3000)
+Normalized_counts_rlog_var_filtered <- Normalized_counts_rlog_corr_filtered[top_variances$gene, ]
+print("Are cohesin genes still in the rlog data set?")
+cohesin_genes %in% row.names(Normalized_counts_rlog_var_filtered)
+
+# write.table(Normalized_counts_vst_var_filtered, "InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_vst_varFiltered.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+# write.table(Normalized_counts_rlog_var_filtered, "InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_rlog_varFiltered.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+
+
+# Min-Max scaling ==============================================================
+vst_min_max <- apply(t(Normalized_counts_vst_var_filtered), 2, min_max)
+table(is.na(vst_min_max))
+
+rlog_min_max <- apply(t(Normalized_counts_rlog_corr_filtered), 2, min_max)
+table(is.na(rlog_min_max))
+
+
+# Z-score per gene =====================================
+vst_zScore <- scale(t(Normalized_counts_vst_var_filtered))
+table(is.na(vst_zScore))
+
+rlog_zScore <- scale(t(Normalized_counts_rlog_var_filtered))
+table(is.na(rlog_zScore))
+
+
+# Quantile Normalization ===============================
+vst_QN <- data.frame(t(normalize.quantiles(as.matrix(Normalized_counts_vst_var_filtered))))
+rownames(vst_QN) <- colnames(Normalized_counts_vst_var_filtered)
+colnames(vst_QN) <- rownames(Normalized_counts_vst_var_filtered)
+
+rlog_QN <- data.frame(t(normalize.quantiles(as.matrix(Normalized_counts_rlog_var_filtered))))
+rownames(rlog_QN) <- colnames(Normalized_counts_rlog_var_filtered)
+colnames(rlog_QN) <- rownames(Normalized_counts_rlog_var_filtered)
+
+
+# Let's see the distribution ====================================
+df_transformation <- bind_rows(make_long(Normalized_counts_vst_var_filtered, "VST"),
+                               make_long(Normalized_counts_rlog_var_filtered, "rlog"))
+df_min_max <- bind_rows(make_long(vst_min_max, "VST Min-Max"),
+                        make_long(rlog_min_max, "rlog Min-Max"))
+df_zscore <- bind_rows(make_long(vst_zScore, "VST Z-score"),
+                       make_long(rlog_zScore, "rlog Z-score"))
+df_QN <- bind_rows(make_long(vst_QN, "VST QN"),
+                   make_long(rlog_QN, "rlog QN"))
+
+p1 <- ggplot(df_transformation, aes(x = Transformation, y = Value, fill = Transformation)) +
+  geom_violin(scale = "width", trim = TRUE) +
+  geom_boxplot(width = 0.1, outlier.size = 0.3, alpha = 0.5) +
+  coord_cartesian(ylim = c(0,50)) +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none") +
+  ylab("Expression values") +
+  ggtitle("Global Distribution of vst/rlog transformation")
+p2 <- ggplot(df_min_max, aes(x = Transformation, y = Value, fill = Transformation)) +
+  geom_violin(scale = "width", trim = TRUE) +
+  geom_boxplot(width = 0.1, outlier.size = 0.3, alpha = 0.5) +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none") +
+  ylab("Expression values") +
+  ggtitle("Global Distribution of vst/rlog + min-max scaling")
+p3 <- ggplot(df_zscore, aes(x = Transformation, y = Value, fill = Transformation)) +
+  geom_violin(scale = "width", trim = TRUE) +
+  geom_boxplot(width = 0.1, outlier.size = 0.3, alpha = 0.5) +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none") +
+  ylab("Expression values") +
+  ggtitle("Global Distribution of vst/rlog + per gene z-score")
+p4 <- ggplot(df_QN, aes(x = Transformation, y = Value, fill = Transformation)) +
+  geom_violin(scale = "width", trim = TRUE) +
+  geom_boxplot(width = 0.1, outlier.size = 0.3, alpha = 0.5) +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none") +
+  ylab("Expression values") +
+  ggtitle("Global Distribution of vst/rlog + Quantile Normalization")
+
+plot_grid(p1, p2, p3, p4, ncol = 4)
+# ggsave("plots/Global_distribution_transformations_top3000.png", device = "png", width = 80, height = 20,
+#        units = "cm", pointsize = 10, dpi = 500)
+
+# Save the tables ===================================
+# write.table(rlog_min_max, "InputTables/Input_TCGA-BEAT_top3000_rlog_min_max.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+# write.table(rlog_zScore, "InputTables/Input_TCGA-BEAT_top3000_rlog_zScore.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+# write.table(rlog_QN, "InputTables/Input_TCGA-BEAT_top3000_rlog_QN.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+# 
+# write.table(vst_min_max, "InputTables/Input_TCGA-BEAT_top3000_vst_min_max.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+# write.table(vst_zScore, "InputTables/Input_TCGA-BEAT_top3000_vst_zScore.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+# write.table(vst_QN, "InputTables/Input_TCGA-BEAT_top3000_vst_QN.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+
+
+# Data partition (from here, run on cluster) ================================
+raw_data <- t(read.table("InputTables/Input_TCGA-BEAT_raw_counts_common_genes.txt", sep="\t", header=T))
+vst_transform <- t(Normalized_counts_vst_var_filtered)
+rlog_transform <- t(Normalized_counts_rlog_var_filtered)
+
+# Variance select raw data
+variances <- apply(raw_data, 1, var)
+table(variances > 0)
+top_variances <- variances %>%
+  enframe(name = "gene", value = "variance") %>%
+  filter(variance > 0) %>%
+  arrange(desc(variance)) %>%
+  slice(1:3000)
+raw_data <- t(raw_data[top_variances$gene, ])
+
+# Load labels 
+TCGA_BEAT_labels <- read.table("InputTables/TCGA_BEAT_cohesin_labels.txt", header=T)
+TCGA_BEAT_labels <- c(TCGA_BEAT_labels$label)
+
+# Load partition indexes
+train_index <- scan("InputTables/Input_train_indexes.txt", sep="\n")
+
+# Splitting Labels
+y_train <- as.factor(TCGA_BEAT_labels[train_index])
+y_test <- as.factor(TCGA_BEAT_labels[-train_index])
+
+# Subset train data
+x_train_raw <- raw_data[train_index, ]
+x_train_vst <- vst_transform[train_index, ]
+x_train_vst_min_max <- vst_min_max[train_index, ]
+x_train_vst_zScore <- vst_zScore[train_index, ]
+x_train_vst_QN <- vst_QN[train_index, ]
+x_train_rlog <- rlog_transform[train_index, ]
+x_train_rlog_min_max <- rlog_min_max[train_index, ]
+x_train_rlog_zScore <- rlog_zScore[train_index, ]
+x_train_rlog_QN <- rlog_QN[train_index, ]
+
+# Subset test data
+x_test_raw <- raw_data[-train_index, ]
+x_test_vst <- vst_transform[-train_index, ]
+x_test_vst_min_max <- vst_min_max[-train_index, ]
+x_test_vst_zScore <- vst_zScore[-train_index, ]
+x_test_vst_QN <- vst_QN[-train_index, ]
+x_test_rlog <- rlog_transform[-train_index, ]
+x_test_rlog_min_max <- rlog_min_max[-train_index, ]
+x_test_rlog_zScore <- rlog_zScore[-train_index, ]
+x_test_rlog_QN <- rlog_QN[-train_index, ]
 
 
 # Try on some models ============================
@@ -206,7 +378,7 @@ all_models <- list(
 )
 
 # Save each model as an RDS file
-# saveRDS(all_models, file = "OutputTables/basic_all_models_rCV_ROSE.rds")
+# saveRDS(all_models, file = "OutputTables/basic_all_models_CV_SMOTE.rds")
 
 # Map test_data ================================
 test_data_map <- list(
@@ -255,6 +427,7 @@ for (model_name in names(all_models)){
   model <- all_models[[model_name]]
   test_data <- test_data_map[[model_name]]
   performance <- get_performance(model, test_data, y_test,
+                                 classes = c("cohesinAML", "wtAML"),
                                  plot_title = paste0(model_name, " model ROC curve"))
   
   # Extract metrics from confusion matrix
@@ -273,10 +446,10 @@ for (model_name in names(all_models)){
 }
 close(pb)
 
-# write.table(performance_df, "OutputTables/basic_all_models_rCV_ROSE_performance.txt",
+# write.table(performance_df, "OutputTables/basic_all_models_CV_SMOTE_performance.txt",
 #             col.names=TRUE, sep="\t")
 
-performance_df <- read.table("OutputTables/basic_all_models_performance.txt", header=T)
+performance_df <- read.table("OutputTables/basic_all_models_CV_ROSE_3000_performance.txt", header=T)
 performance_df <- performance_df %>%
   separate(model, into = c("model", "transformation"), sep = "_", extra = "merge") 
 
@@ -288,7 +461,7 @@ ggplot(performance_df, aes(x = transformation, y = sensitivity, color = model, g
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Model Performance Across Transformations",
        x = "Transformation", y = "Sensitivity", color = "Model")
-# ggsave("plots/basic_model_performance_sensitivity.png", device = "png", width = 15, height = 15,
+# ggsave("plots/basic_model_performance_CV_SMOTE_3000_sensitivity.png", device = "png", width = 15, height = 15,
 #        units = "cm", pointsize = 10, dpi = 500)
 
 # Plot Specificity
@@ -299,7 +472,7 @@ ggplot(performance_df, aes(x = transformation, y = specificity, color = model, g
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Model Performance Across Transformations",
        x = "Transformation", y = "Specificity", color = "Model")
-# ggsave("plots/basic_model_performance_specificity.png", device = "png", width = 15, height = 15,
+# ggsave("plots/basic_model_performance_CV_SMOTE_3000_specificity.png", device = "png", width = 15, height = 15,
 #        units = "cm", pointsize = 10, dpi = 500)
 
 # Plot kappa
@@ -310,7 +483,7 @@ ggplot(performance_df, aes(x = transformation, y = kappa, color = model, group =
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Model Performance Across Transformations",
        x = "Transformation", y = "Kappa", color = "Model")
-# ggsave("plots/basic_model_performance_kappa.png", device = "png", width = 15, height = 15,
+# ggsave("plots/basic_model_performance_CV_SMOTE_3000_kappa.png", device = "png", width = 15, height = 15,
 #        units = "cm", pointsize = 10, dpi = 500)
 
 # Plot AUC
@@ -320,9 +493,14 @@ ggplot(performance_df, aes(x = transformation, y = auc, color = model, group = m
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Model Performance Across Transformations",
-       x = "Transformation", y = "Kappa", color = "Model")
-# ggsave("plots/basic_model_performance_AUC.png", device = "png", width = 15, height = 15,
+       x = "Transformation", y = "AUC", color = "Model")
+# ggsave("plots/basic_model_performance_CV_SMOTE_3000_AUC.png", device = "png", width = 15, height = 15,
 #        units = "cm", pointsize = 10, dpi = 500)
+
+
+# Save best performing model =====================================
+gbm_vst_min_max <- all_models[["gbm_vst_min_max"]]
+saveRDS(gbm_vst_min_max, "OutputTables/basic_gbm_vst_min_max_3000_CV_SMOTE_model.rds")
 
 
 
