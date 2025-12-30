@@ -147,7 +147,7 @@ top_variances <- variances %>%
 raw_data <- t(raw_data[top_variances$gene, ])
 
 # Load labels 
-TCGA_BEAT_labels <- read.table("InputTables/TCGA_BEAT_cohesin_labels.txt", header=T)
+TCGA_BEAT_labels <- read.table("InputTables/TCGA_BEAT_labels_cohesin.txt", header=T)
 TCGA_BEAT_labels <- c(TCGA_BEAT_labels$label)
 
 # Load partition indexes
@@ -181,7 +181,7 @@ x_test_rlog_QN <- rlog_QN[-train_index, ]
 
 
 # Try on some models ============================
-# Set ROSE resampling and rCV
+# Set SMOTE resampling and CV
 trControl <- trainControl(method = "cv", number = 5, classProbs = TRUE, sampling = "smote")
 
 # k-NN
@@ -446,10 +446,10 @@ for (model_name in names(all_models)){
 }
 close(pb)
 
-# write.table(performance_df, "OutputTables/basic_all_models_CV_SMOTE_performance.txt",
+# write.table(performance_df, "OutputTables/basic_all_models_CV_SMOTE_3000_performance.txt",
 #             col.names=TRUE, sep="\t")
 
-performance_df <- read.table("OutputTables/basic_all_models_CV_ROSE_3000_performance.txt", header=T)
+performance_df <- read.table("OutputTables/basic_all_models_CV_SMOTE_3000_performance.txt", header=T)
 performance_df <- performance_df %>%
   separate(model, into = c("model", "transformation"), sep = "_", extra = "merge") 
 
@@ -473,6 +473,17 @@ ggplot(performance_df, aes(x = transformation, y = specificity, color = model, g
   labs(title = "Model Performance Across Transformations",
        x = "Transformation", y = "Specificity", color = "Model")
 # ggsave("plots/basic_model_performance_CV_SMOTE_3000_specificity.png", device = "png", width = 15, height = 15,
+#        units = "cm", pointsize = 10, dpi = 500)
+
+# Plot Precision
+ggplot(performance_df, aes(x = transformation, y = precision, color = model, group = model)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Model Performance Across Transformations",
+       x = "Transformation", y = "Precision", color = "Model")
+# ggsave("plots/basic_model_performance_CV_SMOTE_3000_precision.png", device = "png", width = 15, height = 15,
 #        units = "cm", pointsize = 10, dpi = 500)
 
 # Plot kappa

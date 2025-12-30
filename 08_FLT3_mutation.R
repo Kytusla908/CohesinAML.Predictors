@@ -257,6 +257,7 @@ performance_df <- data.frame(model = character(), sensitivity = numeric(),
                              specificity = numeric(), precision = numeric(),
                              accuracy = numeric(), kappa = numeric(),
                              auc = numeric(), stringsAsFactors = FALSE)
+roc_df_list <- list()
 
 pb <- txtProgressBar(min = 0, max = length(names(all_models)), style = 3)
 i <- 0
@@ -269,6 +270,9 @@ for (model_name in names(all_models)){
   performance <- get_performance(model, test_data, y_test,
                                  classes = c("FLT3.Mutant", "FLT3.WT"),
                                  plot_title = paste0(model_name, " model ROC curve"))
+  
+  # Save ROC curve info
+  roc_df_list[[model_name]] <- performance$roc_df
   
   # Extract metrics from confusion matrix
   cm <- performance$confusion_matrix
@@ -286,8 +290,77 @@ for (model_name in names(all_models)){
 }
 close(pb)
 
-write.table(performance_df, "OutputTables/FLT3_basic_all_models_CV_SMOTE_performance.txt",
-            col.names=TRUE, sep="\t")
+# saveRDS(roc_df_list, "OutputTables/FLT3_basic_models_ROC_data.rds")
+# write.table(performance_df, "OutputTables/FLT3_basic_all_models_CV_SMOTE_performance.txt",
+#             col.names=TRUE, sep="\t")
+
+roc_df_list <- readRDS("OutputTables/FLT3_basic_models_ROC_data.rds")
+performance_df <- read.table("OutputTables/FLT3_basic_all_models_CV_SMOTE_performance.txt", header=T)
+performance_df <- performance_df %>%
+  separate(model, into = c("model", "transformation"), sep = "_", extra = "merge")
+
+# Plot Sensitivity
+ggplot(performance_df, aes(x = transformation, y = sensitivity, color = model, group = model)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Model Performance Across Transformations",
+       x = "Transformation", y = "Sensitivity", color = "Model")
+# ggsave("plots/FLT3/FLT3_basic_model_performance_CV_SMOTE_3000_sensitivity.png", device = "png", width = 15, height = 15,
+#        units = "cm", pointsize = 10, dpi = 500)
+
+# Plot Specificity
+ggplot(performance_df, aes(x = transformation, y = specificity, color = model, group = model)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Model Performance Across Transformations",
+       x = "Transformation", y = "Specificity", color = "Model")
+# ggsave("plots/FLT3/FLT3_basic_model_performance_CV_SMOTE_3000_specificity.png", device = "png", width = 15, height = 15,
+#        units = "cm", pointsize = 10, dpi = 500)
+
+# Plot Precision
+ggplot(performance_df, aes(x = transformation, y = precision, color = model, group = model)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Model Performance Across Transformations",
+       x = "Transformation", y = "Precision", color = "Model")
+# ggsave("plots/FLT3/FLT3_basic_model_performance_CV_SMOTE_3000_precision.png", device = "png", width = 15, height = 15,
+#        units = "cm", pointsize = 10, dpi = 500)
+
+# Plot kappa
+ggplot(performance_df, aes(x = transformation, y = kappa, color = model, group = model)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Model Performance Across Transformations",
+       x = "Transformation", y = "Kappa", color = "Model")
+# ggsave("plots/FLT3/FLT3_basic_model_performance_CV_SMOTE_3000_kappa.png", device = "png", width = 15, height = 15,
+#        units = "cm", pointsize = 10, dpi = 500)
+
+# Plot AUC
+ggplot(performance_df, aes(x = transformation, y = auc, color = model, group = model)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Model Performance Across Transformations",
+       x = "Transformation", y = "AUC", color = "Model")
+# ggsave("plots/FLT3/FLT3_basic_model_performance_CV_SMOTE_3000_AUC.png", device = "png", width = 15, height = 15,
+#        units = "cm", pointsize = 10, dpi = 500)
+
+
+# Save best performing model =====================================
+
+
+
+
+
 
 
 

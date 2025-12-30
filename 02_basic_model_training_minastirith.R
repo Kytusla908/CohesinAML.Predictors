@@ -20,7 +20,7 @@ rlog_QN <- read.table("InputTables/Input_TCGA-BEAT_rlog_QN.txt", header=T)
 train_index <- scan("InputTables/Input_train_indexes.txt", sep="\n")
 
 # Load labels =================================
-TCGA_BEAT_labels <- read.table("InputTables/TCGA_BEAT_labels.txt", header=T)
+TCGA_BEAT_labels <- read.table("InputTables/TCGA_BEAT_labels_cohesin.txt", header=T)
 TCGA_BEAT_labels <- c(TCGA_BEAT_labels$label)
 
 # Data splitting ==============================

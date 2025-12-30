@@ -19,7 +19,7 @@ rlog_QN <- read.table("InputTables/Input_TCGA-BEAT_rlog_QN.txt", header=T)
 
 
 # Load labels =================================
-TCGA_BEAT_labels <- read.table("InputTables/TCGA_BEAT_cohesin_labels.txt", header=T)
+TCGA_BEAT_labels <- read.table("InputTables/TCGA_BEAT_labels_cohesin.txt", header=T)
 TCGA_BEAT_labels <- c(TCGA_BEAT_labels$label)
 
 
