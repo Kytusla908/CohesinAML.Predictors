@@ -7,3 +7,5 @@
 TCGA-BEAT_raw_DESeqDF_filterByExpr_byDatabase.rds
 OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_*.txt
 InputTables/Input_*.txt
+ML_mutation_prediction_Gerard.R
+TCGA_BEAT_data_merge.R
