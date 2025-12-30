@@ -59,7 +59,15 @@ make_long <- function(mat, label){
 # Helper function to check performance
 get_performance <- function(model, test_data, test_labels,
                             classes=c("positive_class", "negative_class"),
-                            plot_title="ROC Curve") {
+                            plot_title="ROC Curve", plot_subtitle = NULL) {
+  
+  # Check train and test contain same variables
+  missing_vars <- setdiff(colnames(model$trainingData)[-1], colnames(test_data))
+  missing_vars <- setdiff(missing_vars, ".outcome")
+  if (length(missing_vars) > 0) {
+    stop("Test data is missing predictors: ", paste(missing_vars, collapse = ", "))
+  }
+  
   # Predictions
   preds <- predict(model, newdata = test_data)
   probs <- predict(model, newdata = test_data, type = "prob")
@@ -68,17 +76,21 @@ get_performance <- function(model, test_data, test_labels,
   prob_pos <- probs[, classes[1]]
   
   # ROC and AUC
-  roc_obj <- roc(response = test_labels, predictor = prob_pos,
-                 levels = c(classes[2], classes[1]), direction = "<")
-  auc_value <- auc(roc_obj)
+  roc_obj <- pROC::roc(response = test_labels, predictor = prob_pos,
+                       levels = c(classes[2], classes[1]), direction = "<")
+  auc_value <- pROC::auc(roc_obj)
+  
+  # ROC dataframe
   roc_df <- data.frame(fpr = 1 - roc_obj$specificities,
-                       tpr = roc_obj$sensitivities)
+                       tpr = roc_obj$sensitivities,
+                       thresholds = roc_obj$thresholds)
   
   # ROC curve
   roc_plot <- ggplot(roc_df, aes(x = fpr, y = tpr)) +
     geom_line(size = 1.2, color = "blue") +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray") +
-    labs(title = plot_title, x = "False Positive Rate", y = "True Positive Rate") +
+    labs(title = plot_title, subtitle = plot_subtitle,
+         x = "False Positive Rate", y = "True Positive Rate") +
     annotate("text", x = 0.9, y = 0.05, label = paste0("AUC = ", round(auc_value, 3)),
              size = 5, color = "black") +
     theme_minimal() + 
@@ -95,6 +107,16 @@ get_performance <- function(model, test_data, test_labels,
     predicted_classes = preds,
     predicted_probabilities = prob_pos,
     auc = auc_value,
+    roc_df = roc_df,
+    roc_obj = roc_obj,
     roc_plot = roc_plot,
     confusion_matrix = cm))
+}
+
+# Helper function to write out Confusion Matrix
+write_confusion_matrix <- function(cm, file="confusion_matrix.txt") {
+  txt <- capture.output(print(cm), type = "output")
+  con <- file(file, open = "wb")
+  writeBin(paste0(paste(txt, collapse = "\n"), "\n"), con)
+  close(con)
 }
