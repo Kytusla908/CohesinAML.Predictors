@@ -55,6 +55,7 @@ table(Fischer_labels_df$label)
 TCGA_BEAT_vst_min_max <- read.table("InputTables/Input_TCGA-BEAT_top3000_vst_min_max.txt", check.names = FALSE)
 TCGA_BEAT_vst_zScore <- read.table("InputTables/Input_TCGA-BEAT_top3000_vst_zScore.txt", check.names = FALSE)
 TCGA_BEAT_vst_QN <- read.table("InputTables/Input_TCGA-BEAT_top3000_vst_QN.txt", check.names = FALSE)
+TCGA_BEAT_rlog <- read.table("InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_rlog_corrFiltered.txt", check.names = FALSE)
 
 
 # Load best varFiltered CV+ROSE model ============================
@@ -67,20 +68,28 @@ fischer_dds <- DESeq(DESeqDataSetFromMatrix(countData = Fischer_df,
                                             colData = Fischer_metadata,
                                             design = ~ 1))
 
-# Apply vst + min_max transformation
+# Apply vst
 fischer_vsd <- as.data.frame(assay(vst(fischer_dds, blind=T)))
+fischer_rld <- as.data.frame(assay(rlog(fischer_dds, blind=T)))
 
 # Check genes are the same
 table(colnames(TCGA_BEAT_vst_min_max) %in% row.names(fischer_vsd))
 table(colnames(gbm_vst_min_max[["trainingData"]]) %in% row.names(fischer_vsd))
+
+table(row.names(TCGA_BEAT_rlog) %in% row.names(fischer_rld))
 
 # Select same genes as training and testing
 fischer_vst <- t(fischer_vsd[colnames(TCGA_BEAT_vst_min_max), ])
 dim(fischer_vst)
 table(colnames(gbm_vst_min_max[["trainingData"]]) %in% colnames(fischer_vst))
 
+fischer_rlog <- t(fischer_rld[row.names(TCGA_BEAT_rlog), ])
+dim(fischer_rlog)
+
 # Save Fischer Input data
 # write.table(fischer_vst, "InputTables/Input_NormalizedCounts_Fischer_top3000_vst.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+# write.table(fischer_rlog, "InputTables/Input_NormalizedCounts_Fischer_top3000_rlog.txt",
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
 
@@ -132,7 +141,7 @@ ggplot(distribution_data, aes(x = value, color = dataset)) +
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
 
-# Perform QN transformation ======================
+# Perform QN transformation (vst)======================
 fischer_vst_QN <- data.frame(t(normalize.quantiles(t(fischer_vst))))
 table(is.na(fischer_vst_QN))
 rownames(fischer_vst_QN) <- rownames(fischer_vst)
@@ -155,6 +164,32 @@ ggplot(distribution_data, aes(x = value, color = dataset)) +
 # ggsave("plots/Global_distribution_TCGA_BEAT_Fischer_vst_QN_top3000.png", device = "png",
 #        width = 12, height = 12, units = "cm", pointsize = 10, dpi = 500)
 # write.table(fischer_vst_QN, "InputTables/Input_Fischer_top3000_vst_QN.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+
+
+# Perform QN transformation (rlog)======================
+fischer_rlog_QN <- data.frame(t(normalize.quantiles(t(fischer_rlog))))
+table(is.na(fischer_rlog_QN))
+rownames(fischer_rlog_QN) <- rownames(fischer_rlog)
+colnames(fischer_rlog_QN) <- colnames(fischer_rlog)
+
+# Check distribution
+TCGA_BEAT_values <- as.vector(as.matrix(TCGA_BEAT_rlog_QN))
+FISCHER_values <- as.vector(as.matrix(fischer_rlog_QN))
+distribution_data <- data.frame(value = c(TCGA_BEAT_values, FISCHER_values),
+                                dataset = rep(c("TCGA-BEAT", "FISCHER"), 
+                                              times = c(length(TCGA_BEAT_values), length(FISCHER_values))))
+ggplot(distribution_data, aes(x = value, color = dataset)) +
+  geom_density(size = 1) +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = "white", color = NA),
+        plot.background  = element_rect(fill = "white", color = NA)) +
+  labs(title = "Global distribution of QN values",
+       x = "Scaled value", y = "Density")
+
+# ggsave("plots/Global_distribution_TCGA_BEAT_Fischer_rlog_QN_top3000.png", device = "png",
+#        width = 12, height = 12, units = "cm", pointsize = 10, dpi = 500)
+# write.table(fischer_rlog_QN, "InputTables/Input_Fischer_top3000_rlog_QN.txt",
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
 
