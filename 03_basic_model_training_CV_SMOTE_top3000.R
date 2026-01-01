@@ -202,6 +202,9 @@ kNN_rlog_zScore <- train(x=x_train_rlog_zScore, y=y_train, method="knn", trContr
 
 # Naive Bayes
 tuneGrid <- data.frame(usekernel = TRUE, laplace = 0, adjust = 1)
+print("Fitting model nb_raw")
+nb_raw <- train(x=x_train_raw, y=y_train, method="naive_bayes",
+                trControl=trControl, tuneGrid = tuneGrid)
 print("Fitting model nb_vst")
 nb_vst <- train(x=x_train_vst, y=y_train, method="naive_bayes", trControl=trControl,
                 tuneGrid = tuneGrid)
@@ -243,6 +246,9 @@ svm_rlog_zScore <- train(x=x_train_rlog_zScore, y=y_train, method="svmLinear2", 
                          tuneGrid = tuneGrid)
 
 # Logistic Regression
+print("Fitting model glm_raw")
+glm_raw <- train(x=x_train_raw, y=y_train, method="glm",
+                 family="binomial", trControl=trControl)
 print("Fitting model glm_vst")
 glm_vst <- train(x=x_train_vst, y=y_train, method="glm",
                  family="binomial", trControl=trControl)
@@ -272,6 +278,9 @@ glm_rlog_QN <- train(x=x_train_rlog_QN, y=y_train, method="glm",
 mtry_val <- floor(sqrt(ncol(x_train_raw)))
 tuneGrid <- data.frame(mtry = mtry_val)
 
+print("Fitting model rf_raw")
+rf_raw <- train(x=x_train_raw, y=y_train, method="rf", trControl=trControl,
+                tuneGrid = tuneGrid)
 print("Fitting model rf_vst")
 rf_vst <- train(x=x_train_vst, y=y_train, method="rf", trControl=trControl,
                 tuneGrid = tuneGrid)
@@ -301,6 +310,9 @@ rf_rlog_QN <- train(x=x_train_rlog_QN, y=y_train, method="rf", trControl=trContr
 tuneGrid <- data.frame(n.trees = 100, interaction.depth = 1, shrinkage = 0.1,
                       n.minobsinnode = 10)
 
+print("Fitting model gbm_raw")
+gbm_raw <- train(x=x_train_raw, y=y_train, method="gbm", trControl=trControl,
+                 tuneGrid = tuneGrid, verbose = FALSE)
 print("Fitting model gbm_vst")
 gbm_vst <- train(x=x_train_vst, y=y_train, method="gbm", trControl=trControl,
                  tuneGrid = tuneGrid, verbose = FALSE)
@@ -335,6 +347,7 @@ all_models <- list(
   kNN_rlog_min_max = kNN_rlog_min_max,
   kNN_rlog_zScore = kNN_rlog_zScore,
   
+  nb_raw = nb_raw,
   nb_vst = nb_vst,
   nb_rlog = nb_rlog,
   nb_vst_min_max = nb_vst_min_max,
@@ -349,6 +362,7 @@ all_models <- list(
   svm_rlog_min_max = svm_rlog_min_max,
   svm_rlog_zScore = svm_rlog_zScore,
   
+  glm_raw = glm_raw,
   glm_vst = glm_vst,
   glm_rlog = glm_rlog,
   glm_vst_min_max = glm_vst_min_max,
@@ -358,6 +372,7 @@ all_models <- list(
   glm_rlog_zScore = glm_rlog_zScore,
   glm_rlog_QN = glm_rlog_QN,
   
+  rf_raw = rf_raw,
   rf_vst = rf_vst,
   rf_rlog = rf_rlog,
   rf_vst_min_max = rf_vst_min_max,
@@ -367,6 +382,7 @@ all_models <- list(
   rf_rlog_zScore = rf_rlog_zScore,
   rf_rlog_QN = rf_rlog_QN,
   
+  gbm_raw = gbm_raw,
   gbm_vst = gbm_vst,
   gbm_rlog = gbm_rlog,
   gbm_vst_min_max = gbm_vst_min_max,
@@ -387,7 +403,7 @@ test_data_map <- list(
   kNN_rlog_min_max = x_test_rlog_min_max,
   kNN_rlog_zScore = x_test_rlog_zScore,
   
-  nb_vst = x_test_vst, nb_rlog = x_test_rlog,
+  nb_raw = x_test_raw, nb_vst = x_test_vst, nb_rlog = x_test_rlog,
   nb_vst_min_max = x_test_vst_min_max, nb_vst_zScore = x_test_vst_zScore,
   nb_vst_QN = x_test_vst_QN, nb_rlog_min_max = x_test_rlog_min_max,
   nb_rlog_zScore = x_test_rlog_zScore, nb_rlog_QN = x_test_rlog_QN,
@@ -395,17 +411,17 @@ test_data_map <- list(
   svm_vst_min_max = x_test_vst_min_max, svm_vst_zScore = x_test_vst_zScore,
   svm_rlog_min_max = x_test_rlog_min_max, svm_rlog_zScore = x_test_rlog_zScore,
   
-  glm_vst = x_test_vst, glm_rlog = x_test_rlog,
+  glm_raw = x_test_raw, glm_vst = x_test_vst, glm_rlog = x_test_rlog,
   glm_vst_min_max = x_test_vst_min_max, glm_vst_zScore = x_test_vst_zScore,
   glm_vst_QN = x_test_vst_QN, glm_rlog_min_max = x_test_rlog_min_max,
   glm_rlog_zScore = x_test_rlog_zScore, glm_rlog_QN = x_test_rlog_QN,
   
-  rf_vst = x_test_vst, rf_rlog = x_test_rlog,
+  rf_raw = x_test_raw, rf_vst = x_test_vst, rf_rlog = x_test_rlog,
   rf_vst_min_max = x_test_vst_min_max, rf_vst_zScore = x_test_vst_zScore,
   rf_vst_QN = x_test_vst_QN, rf_rlog_min_max = x_test_rlog_min_max,
   rf_rlog_zScore = x_test_rlog_zScore, rf_rlog_QN = x_test_rlog_QN,
   
-  gbm_vst = x_test_vst, gbm_rlog = x_test_rlog,
+  gbm_raw = x_test_raw, gbm_vst = x_test_vst, gbm_rlog = x_test_rlog,
   gbm_vst_min_max = x_test_vst_min_max, gbm_vst_zScore = x_test_vst_zScore,
   gbm_vst_QN = x_test_vst_QN, gbm_rlog_min_max = x_test_rlog_min_max,
   gbm_rlog_zScore = x_test_rlog_zScore, gbm_rlog_QN = x_test_rlog_QN

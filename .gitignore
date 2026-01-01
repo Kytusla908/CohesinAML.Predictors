@@ -9,3 +9,4 @@ OutputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_*.txt
 InputTables/Input_*.txt
 ML_mutation_prediction_Gerard.R
 TCGA_BEAT_data_merge.R
+03_basic_model_training_CV_SMOTE_top3000_no_raw.R
