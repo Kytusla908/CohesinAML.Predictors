@@ -177,6 +177,10 @@ ggplot(varImp_top20, aes(x = reorder(variable, Overall), y = Overall)) +
 # ggsave("plots/VariableImportance_plot_gbm_tuned.png", device = "png",
 #        width = 18, height = 12, units = "cm", pointsize = 10, dpi = 500)
 
+varImp100 <- varImp_df %>% arrange(desc(Overall)) %>% head(100) %>% select(variable)
+# write.table(varImp100, "OutputTables/cohesin_varImp100.txt", quote = FALSE,
+#             row.names = FALSE, col.names = FALSE)
+
 
 # Which samples are wrongly predicted? =========================
 Fischer_metadata <- read.table("InputTables/Metadata_RNAseq_cohesin_AML.inclQC.txt", sep = "\t", header = T)

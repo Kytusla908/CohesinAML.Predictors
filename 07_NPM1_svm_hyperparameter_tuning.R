@@ -143,6 +143,9 @@ ggplot(varImp_top20, aes(x = reorder(variable, importance.NPM1.Mutant), y = impo
 # ggsave("plots/NPM1/VariableImportance_plot_svm_tuned.png", device = "png",
 #        width = 18, height = 12, units = "cm", pointsize = 10, dpi = 500)
 
+varImp100 <- varImp_df %>% arrange(desc(importance.NPM1.Mutant)) %>% head(100) %>% select(variable)
+write.table(varImp100, "OutputTables/NPM1_varImp100.txt", quote = FALSE,
+            row.names = FALSE, col.names = FALSE)
 
 
 
