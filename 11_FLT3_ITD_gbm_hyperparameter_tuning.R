@@ -272,7 +272,7 @@ ggplot(roc_5_df, aes(x = fpr, y = tpr, color = model)) +
   geom_line(size = 1.2) +
   geom_abline(intercept = 0, slope = 1,
               linetype = "dashed", color = "gray") +
-  labs(title = "ROC Curves for Top 5 gbm models on test data",
+  labs(title = "ROC Curves for Top 5 gbm models on Fischer data",
        x = "False Positive Rate", y = "True Positive Rate",
        color = "Model") +
   theme_minimal() +
