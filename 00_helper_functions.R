@@ -42,21 +42,24 @@ plotPCA.DESeqTransform = function(object, intgroup="condition", ntop=500, return
     coord_fixed() + theme_bw()
 }
 
-# Min-Max scaling function
+
+# Min-Max scaling function ============================
 min_max <- function(x) {
   rng <- range(x)
   if (rng[1] == rng[2]) return(rep(0, length(x)))
   (x - rng[1]) / diff(rng)
 }
 
-# Convert matrices to long format with a label
+
+# Convert matrices to long format with a label ============================
 make_long <- function(mat, label){
   as.data.frame(mat) %>%
     pivot_longer(cols = everything(), names_to = "Sample", values_to = "Value") %>%
     mutate(Transformation = label)
 }
 
-# Helper function to check performance
+
+# Helper function to check performance ============================
 get_performance <- function(model, test_data, test_labels,
                             classes=c("positive_class", "negative_class"),
                             plot_title="ROC Curve", plot_subtitle = NULL) {
@@ -113,10 +116,72 @@ get_performance <- function(model, test_data, test_labels,
     confusion_matrix = cm))
 }
 
-# Helper function to write out Confusion Matrix
+
+# Helper function to write out Confusion Matrix =======================
 write_confusion_matrix <- function(cm, file="confusion_matrix.txt") {
   txt <- capture.output(print(cm), type = "output")
   con <- file(file, open = "wb")
   writeBin(paste0(paste(txt, collapse = "\n"), "\n"), con)
   close(con)
 }
+
+
+# Helper function to get ensemble predictions =======================
+ensemble_predict <- function(all_models, selected_models, test_data_map,
+                             positive_class = "cohesinAML", negative_class = "wtAML",
+                             threshold = 0.5, weights = NULL) {
+  
+  # checks 
+  if (!all(selected_models %in% names(all_models))) {
+    stop("Some selected_models are not present in all_models")
+  }
+  
+  if (!all(selected_models %in% names(test_data_map))) {
+    stop("Some selected_models are not present in test_data_map")
+  }
+  if (!is.null(weights)) {
+    if (!all(names(weights) %in% selected_models)) {
+      stop("All weight names must match selected_models")
+    }
+    if (any(weights < 0)) {
+      stop("All weights must be non-negative")
+    }
+    # all weights must sum 1
+    weights <- weights / sum(weights)
+  }
+  
+  # select models
+  ensemble_models <- all_models[selected_models]
+  
+  # predict probabilities
+  ensemble_preds <- lapply(selected_models, function(m) {
+    preds <- predict(ensemble_models[[m]],
+                     newdata = test_data_map[[m]],
+                     type = "prob")
+    
+    # handle matrix / data.frame output
+    if (is.matrix(preds) || is.data.frame(preds)) {
+      preds[, positive_class]
+    } else { preds }
+    })
+  
+  names(ensemble_preds) <- selected_models
+  
+  # average probabilities
+  preds_df <- as.data.frame(ensemble_preds)
+  if (is.null(weights)) {
+    avg_pred <- rowMeans(preds_df)
+  } else {
+    avg_pred <- rowSums(sweep(preds_df, 2, weights[names(preds_df)], `*`))
+  }
+  
+  # final class
+  ensemble_class <- ifelse(avg_pred > threshold,
+                           positive_class,
+                           negative_class)
+  
+  return(list(probabilities = avg_pred,
+              classes = as.factor(ensemble_class),
+              per_model_probabilities = preds_df))
+}
+
