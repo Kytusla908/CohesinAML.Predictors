@@ -185,3 +185,24 @@ ensemble_predict <- function(all_models, selected_models, test_data_map,
               per_model_probabilities = preds_df))
 }
 
+
+# Helper function to register execution times for each model =================
+log_time <- function(model_name, start_time, timing_log = NULL) {
+  end_time <- Sys.time()
+  elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+  
+  cat(sprintf("[%s] %s | elapsed: %.2f sec\n",
+              format(end_time, "%Y-%m-%d %H:%M:%S"), model_name, elapsed))
+  
+  if (!is.null(timing_log)){
+    timing_log <- rbind(timing_log,
+                        data.frame(model = model_name,
+                                   start = start_time,
+                                   end = end_time,
+                                   elapsed = elapsed,
+                                   stringsAsFactors = FALSE))
+    return(timing_log)
+  }
+  invisible(NULL)
+}
+
