@@ -18,6 +18,24 @@ Fischer_labels <- read.table("InputTables/Fischer_labels_NPM1.txt", header=T)
 Fischer_labels <- c(Fischer_labels$label)
 Fischer_labels <- as.factor(Fischer_labels)
 
+# Plot proportions Fischer
+Fischer_metadata <- read.table("InputTables/Metadata_RNAseq_cohesin_AML.inclQC.txt",
+                               sep = "\t", header = T)
+Fischer_npm1_mut <- ifelse(Fischer_metadata$NPM1=="neg", "WT", "Mutant")
+npm1_tab <- as.data.frame(table(Fischer_npm1_mut))
+colnames(npm1_tab) <- c("NPM1", "Count")
+ggplot(npm1_tab, aes(x = "", y = Count, fill = NPM1)) +
+  geom_col(width = 1, color = "white") +
+  geom_text(aes(label = Count), position = position_stack(vjust = 0.5), color = "black") +
+  coord_polar(theta = "y") +
+  labs(title="NPM1 mutant and WT in Fischer samples") +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA))
+# ggsave("plots/NPM1/NPM1_mut_proportions_Fischer.png", device="png",
+#        units="cm", dpi=500, width=15, height=12)
+
+
 # Load partition indexes
 train_index <- scan("InputTables/Input_train_indexes.txt", sep="\n")
 

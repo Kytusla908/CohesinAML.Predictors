@@ -18,6 +18,23 @@ TCGA_BEAT_labels <- as.factor(c(TCGA_BEAT_labels$x))
 Fischer_labels <- read.table("InputTables/Fischer_labels_FLT3_ITD.txt", header=T)
 Fischer_labels <- as.factor(c(Fischer_labels$label))
 
+# Plot proportions Fischer
+Fischer_metadata <- read.table("InputTables/Metadata_RNAseq_cohesin_AML.inclQC.txt",
+                               sep = "\t", header = T)
+Fischer_npm1_mut <- ifelse(Fischer_metadata$FLT3_ITD=="neg", "WT", "Mutant")
+flt3_itd_tab <- as.data.frame(table(Fischer_npm1_mut))
+colnames(flt3_itd_tab) <- c("FLT3_ITD", "Count")
+ggplot(flt3_itd_tab, aes(x = "", y = Count, fill = FLT3_ITD)) +
+  geom_col(width = 1, color = "white") +
+  geom_text(aes(label = Count), position = position_stack(vjust = 0.5), color = "black") +
+  coord_polar(theta = "y") +
+  labs(title="FLT3-ITD mutant and WT in Fischer samples") +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA))
+# ggsave("plots/FLT3_ITD/FLT3_ITD_mut_proportions_Fischer.png", device="png",
+#        units="cm", dpi=500, width=15, height=12)
+
 # Load partition indexes
 train_index <- scan("InputTables/Input_train_indexes.txt", sep="\n")
 
