@@ -360,7 +360,7 @@ ggplot(performance_df, aes(x = transformation, y = sensitivity, color = model, g
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Model Performance Across Transformations",
        x = "Transformation", y = "Sensitivity", color = "Model")
-ggsave("plots/FLT3_ITD/FLT3_basic_model_performance_CV_SMOTE_3000_sensitivity.png", device = "png", width = 15, height = 15,
+ggsave("plots/FLT3_ITD/FLT3_ITD_basic_model_performance_CV_SMOTE_3000_sensitivity.png", device = "png", width = 15, height = 15,
        units = "cm", pointsize = 10, dpi = 500)
 
 # Plot Specificity
@@ -371,7 +371,7 @@ ggplot(performance_df, aes(x = transformation, y = specificity, color = model, g
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Model Performance Across Transformations",
        x = "Transformation", y = "Specificity", color = "Model")
-ggsave("plots/FLT3_ITD/FLT3_basic_model_performance_CV_SMOTE_3000_specificity.png", device = "png", width = 15, height = 15,
+ggsave("plots/FLT3_ITD/FLT3_ITD_basic_model_performance_CV_SMOTE_3000_specificity.png", device = "png", width = 15, height = 15,
        units = "cm", pointsize = 10, dpi = 500)
 
 # Plot Precision
@@ -382,7 +382,7 @@ ggplot(performance_df, aes(x = transformation, y = precision, color = model, gro
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Model Performance Across Transformations",
        x = "Transformation", y = "Precision", color = "Model")
-ggsave("plots/FLT3_ITD/FLT3_basic_model_performance_CV_SMOTE_3000_precision.png", device = "png", width = 15, height = 15,
+ggsave("plots/FLT3_ITD/FLT3_ITD_basic_model_performance_CV_SMOTE_3000_precision.png", device = "png", width = 15, height = 15,
        units = "cm", pointsize = 10, dpi = 500)
 
 # Plot kappa
@@ -393,7 +393,7 @@ ggplot(performance_df, aes(x = transformation, y = kappa, color = model, group =
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Model Performance Across Transformations",
        x = "Transformation", y = "Kappa", color = "Model")
-ggsave("plots/FLT3_ITD/FLT3_basic_model_performance_CV_SMOTE_3000_kappa.png", device = "png", width = 15, height = 15,
+ggsave("plots/FLT3_ITD/FLT3_ITD_basic_model_performance_CV_SMOTE_3000_kappa.png", device = "png", width = 15, height = 15,
        units = "cm", pointsize = 10, dpi = 500)
 
 # Plot AUC
@@ -404,7 +404,7 @@ ggplot(performance_df, aes(x = transformation, y = auc, color = model, group = m
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Model Performance Across Transformations",
        x = "Transformation", y = "AUC", color = "Model")
-ggsave("plots/FLT3_ITD/FLT3_basic_model_performance_CV_SMOTE_3000_AUC.png", device = "png", width = 15, height = 15,
+ggsave("plots/FLT3_ITD/FLT3_ITD_basic_model_performance_CV_SMOTE_3000_AUC.png", device = "png", width = 15, height = 15,
        units = "cm", pointsize = 10, dpi = 500)
 
 
