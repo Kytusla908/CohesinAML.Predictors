@@ -55,7 +55,10 @@ table(Fischer_labels_df$label)
 TCGA_BEAT_vst_min_max <- read.table("InputTables/Input_TCGA-BEAT_top3000_vst_min_max.txt", check.names = FALSE)
 TCGA_BEAT_vst_zScore <- read.table("InputTables/Input_TCGA-BEAT_top3000_vst_zScore.txt", check.names = FALSE)
 TCGA_BEAT_vst_QN <- read.table("InputTables/Input_TCGA-BEAT_top3000_vst_QN.txt", check.names = FALSE)
-TCGA_BEAT_rlog <- read.table("InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_rlog_corrFiltered.txt", check.names = FALSE)
+TCGA_BEAT_rlog <- read.table("InputTables/Input_NormalizedCounts_TCGA-BEAT_filterByExpr_rlog_varFiltered.txt", check.names = FALSE)
+TCGA_BEAT_rlog_min_max <- read.table("InputTables/Input_TCGA-BEAT_top3000_rlog_min_max.txt", check.names = FALSE)
+TCGA_BEAT_rlog_zScore <- read.table("InputTables/Input_TCGA-BEAT_top3000_rlog_zScore.txt", check.names = FALSE)
+TCGA_BEAT_rlog_QN <- read.table("InputTables/Input_TCGA-BEAT_top3000_rlog_QN.txt", check.names = FALSE)
 
 
 # Load best varFiltered CV+ROSE model ============================
@@ -93,7 +96,7 @@ dim(fischer_rlog)
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
 
-# Perform min-max transformation ======================
+# Perform min-max transformation (vst) ======================
 fischer_vst_min_max <- apply(fischer_vst, 2, min_max)
 table(is.na(fischer_vst_min_max))
 
@@ -116,7 +119,7 @@ ggplot(distribution_data, aes(x = value, color = dataset)) +
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
 
-# Perform zScore transformation ======================
+# Perform zScore transformation (vst) ======================
 fischer_vst_zScore <- scale(fischer_vst)
 table(is.na(fischer_vst_zScore))
 fischer_vst_zScore[, apply(fischer_vst, 2, sd, na.rm = TRUE) == 0] <- 0
@@ -164,6 +167,54 @@ ggplot(distribution_data, aes(x = value, color = dataset)) +
 # ggsave("plots/Global_distribution_TCGA_BEAT_Fischer_vst_QN_top3000.png", device = "png",
 #        width = 12, height = 12, units = "cm", pointsize = 10, dpi = 500)
 # write.table(fischer_vst_QN, "InputTables/Input_Fischer_top3000_vst_QN.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+
+
+# Perform min-max transformation (rlog) ======================
+fischer_rlog_min_max <- apply(fischer_rlog, 2, min_max)
+table(is.na(fischer_rlog_min_max))
+
+# Check distribution
+TCGA_BEAT_values <- as.vector(as.matrix(TCGA_BEAT_rlog_min_max))
+FISCHER_values <- as.vector(as.matrix(fischer_rlog_min_max))
+distribution_data <- data.frame(value = c(TCGA_BEAT_values, FISCHER_values),
+                                dataset = rep(c("TCGA-BEAT", "FISCHER"), 
+                                              times = c(length(TCGA_BEAT_values), length(FISCHER_values))))
+ggplot(distribution_data, aes(x = value, color = dataset)) +
+  geom_density(size = 1) +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = "white", color = NA),
+        plot.background  = element_rect(fill = "white", color = NA)) +
+  labs(title = "Global distribution of min-max scaled values",
+       x = "Scaled value", y = "Density")
+# ggsave("plots/Global_distribution_TCGA_BEAT_Fischer_rlog_min_max_top3000.png", device = "png",
+#        width = 12, height = 12, units = "cm", pointsize = 10, dpi = 500)
+# write.table(fischer_rlog_min_max, "InputTables/Input_Fischer_top3000_rlog_min_max.txt",
+#             row.names = T, col.names = T, quote = F, sep = "\t")
+
+
+# Perform zScore transformation (rlog) ======================
+fischer_rlog_zScore <- scale(fischer_rlog)
+table(is.na(fischer_rlog_zScore))
+fischer_rlog_zScore[, apply(fischer_rlog, 2, sd, na.rm = TRUE) == 0] <- 0
+table(is.na(fischer_rlog_zScore))
+
+# Check distribution
+TCGA_BEAT_values <- as.vector(as.matrix(TCGA_BEAT_rlog_zScore))
+FISCHER_values <- as.vector(as.matrix(fischer_rlog_zScore))
+distribution_data <- data.frame(value = c(TCGA_BEAT_values, FISCHER_values),
+                                dataset = rep(c("TCGA-BEAT", "FISCHER"), 
+                                              times = c(length(TCGA_BEAT_values), length(FISCHER_values))))
+ggplot(distribution_data, aes(x = value, color = dataset)) +
+  geom_density(size = 1) +
+  theme_minimal() +
+  theme(panel.background = element_rect(fill = "white", color = NA),
+        plot.background  = element_rect(fill = "white", color = NA)) +
+  labs(title = "Global distribution of zScored values",
+       x = "Scaled value", y = "Density")
+# ggsave("plots/Global_distribution_TCGA_BEAT_Fischer_rlog_zScore_top3000.png", device = "png",
+#        width = 12, height = 12, units = "cm", pointsize = 10, dpi = 500)
+# write.table(fischer_rlog_zScore, "InputTables/Input_Fischer_top3000_rlog_zScore.txt",
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
 
