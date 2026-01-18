@@ -319,7 +319,7 @@ summary(lmm)
 ggplot(timing_log,
        aes(x = stabilizing_transformation, y = log_elapsed, fill = stabilizing_transformation)) +
   geom_boxplot() +
-  labs(x = "Stabilizing transformation",
+  labs(x = "Normalization function",
        y = "Training time (log10(s))") + guides(fill = "none")
 # ggsave("plots/timing_distribution_stabilizing_transformation_boxplot.png", device = "png", width = 12, height = 12,
 #        units = "cm", pointsize = 10, dpi = 500)
