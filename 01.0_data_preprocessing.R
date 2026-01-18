@@ -61,6 +61,22 @@ ggplot(common_genes_table, aes(x = "", y = Count, fill = Common)) +
 # ggsave("plots/common_genes_in_datasets.png", device="png", units="cm", dpi=500,
 #        width=15, height=12)
 
+# Venn Diagram
+input <- list(TCGA_BEAT=colnames(TCGA_BEAT_df), Fischer=colnames(Fischer_df))
+venn.diagram(input, filename ='plots/VennDiagram_TCGA_BEAT_Fischer_common_genes.png', height = 2500,
+             width = 2500, resolution = 500, imagetype = "tiff", units = "px", 
+             compression ="lzw", na = "stop",
+             main = "Common genes TCGA-BEAT and Fischer datasets", 
+             main.fontface = "plain", main.fontfamily = "sans",
+             fontfamily = "sans", main.col = "black", main.pos = c(0.42, 1.1),
+             main.cex = 1, main.just = c(0.5, 1), category.names = c("Fischer", "TCGA_BEAT"),
+             cat.pos = c(305, 55), cat.dist = c(0.2, 0.2), cat.cex = 1, 
+             force.unique =TRUE, print.mode = "raw", sigdigs = 2, direct.area = F,
+             hyper.test = FALSE, total.population = NULL, 
+             lower.tail = TRUE,  alpha = 0.5, lty="blank",
+             fill = c("darkgreen", "lightgreen"), cex = 0.5, scaled = FALSE)
+file.remove(list.files(path = "./plots", pattern = ".log$", full.names = TRUE))
+
 keep <- colnames(TCGA_BEAT_df) %in% colnames(Fischer_df)
 TCGA_BEAT_df <- TCGA_BEAT_df[, keep]
 # write.table(TCGA_BEAT_df, "InputTables/Input_TCGA-BEAT_raw_counts_common_genes.txt",
