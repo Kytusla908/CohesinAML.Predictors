@@ -26,8 +26,8 @@ table(TCGA_BEAT_NPM1_labels)
 
 # Plot mutants proportions
 npm1_tab <- as.data.frame(table(TCGA_BEAT_NPM1_labels))
-colnames(npm1_tab) <- c("npm1", "Count")
-ggplot(npm1_tab, aes(x = "", y = Count, fill = npm1)) +
+colnames(npm1_tab) <- c("Class", "Count")
+ggplot(npm1_tab, aes(x = "", y = Count, fill = Class)) +
   geom_col(width = 1, color = "white") +
   geom_text(aes(label = Count), position = position_stack(vjust = 0.5), color = "black") +
   coord_polar(theta = "y") +
@@ -35,8 +35,8 @@ ggplot(npm1_tab, aes(x = "", y = Count, fill = npm1)) +
   theme_void() +
   theme(panel.background = element_rect(fill = "white", color = NA),
         plot.background = element_rect(fill = "white", color = NA))
-# ggsave("plots/NPM1/NPM1_mutants_proportions_TCGA_BEAT.png", device="png",
-#        units="cm", dpi=500, width=15, height=12)
+ggsave("plots/NPM1/NPM1_mutants_proportions_TCGA_BEAT.png", device="png",
+       units="cm", dpi=500, width=15, height=12)
 
 # write.table(TCGA_BEAT_NPM1_labels, "InputTables/TCGA_BEAT_labels_NPM1.txt",
 #             row.names = F, quote = F, sep = "\t")
