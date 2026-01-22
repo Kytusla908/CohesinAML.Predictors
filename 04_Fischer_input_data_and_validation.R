@@ -211,7 +211,8 @@ ggplot(distribution_data, aes(x = value, color = dataset)) +
   theme(panel.background = element_rect(fill = "white", color = NA),
         plot.background  = element_rect(fill = "white", color = NA)) +
   labs(title = "Global distribution of zScored values",
-       x = "Scaled value", y = "Density")
+       x = "Scaled value", y = "Density") +
+  coord_cartesian(xlim = c(-5, 5))
 # ggsave("plots/Global_distribution_TCGA_BEAT_Fischer_rlog_zScore_top3000.png", device = "png",
 #        width = 12, height = 12, units = "cm", pointsize = 10, dpi = 500)
 # write.table(fischer_rlog_zScore, "InputTables/Input_Fischer_top3000_rlog_zScore.txt",
