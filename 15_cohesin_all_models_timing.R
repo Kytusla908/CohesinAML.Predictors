@@ -320,7 +320,8 @@ ggplot(timing_log,
        aes(x = stabilizing_transformation, y = log_elapsed, fill = stabilizing_transformation)) +
   geom_boxplot() +
   labs(x = "Normalization function",
-       y = "Training time (log10(s))") + guides(fill = "none")
+       y = "Training time (log10(s))") + guides(fill = "none") +
+  theme_bw()
 # ggsave("plots/timing_distribution_stabilizing_transformation_boxplot.png", device = "png", width = 12, height = 12,
 #        units = "cm", pointsize = 10, dpi = 500)
 
@@ -330,7 +331,8 @@ ggplot(timing_log,
        aes(x = transformation, y = log_elapsed, fill = transformation)) +
   geom_boxplot() +
   labs(x = "Data Transformation",
-       y = "Training time (log10(s))") + guides(fill = "none")
+       y = "Training time (log10(s))") + guides(fill = "none") +
+  theme_bw()
 # ggsave("plots/timing_distribution_data_transformations_boxplot.png", device = "png", width = 12, height = 12,
 #        units = "cm", pointsize = 10, dpi = 500)
 
