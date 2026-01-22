@@ -131,7 +131,7 @@ dds <- readRDS("OutputTables/TCGA-BEAT_raw_DESeqDF_filterByExpr_byDatabase.rds")
 
 # Normalize
 vsd <- vst(dds)
-# saveRDS(vsd, file = "OutputTables/TCGA-BEAT_raw_DESeq2vst_filterByExpr_byDatabase.rds")
+# saveRDS(vsd, file = "OutputTables/TCGA-BEAT_raw_DESeq2_vst_filterByExpr_byDatabase.rds")
 # write.table(as.data.frame(assay(vsd)), "InputTables/NormalizedCounts_TCGA-BEAT_filterByExpr_vst.txt", 
 #             row.names = T, col.names = T, quote = F, sep = "\t")
 
