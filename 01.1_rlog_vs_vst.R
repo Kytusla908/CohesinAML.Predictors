@@ -22,7 +22,7 @@ rld <- readRDS("OutputTables/TCGA-BEAT_raw_DESeq2_rlog_filterByExpr_byDatabase.r
 # Check PCA
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
 plotPCA.DESeqTransform(rld, intgroup="Database") +
-  coord_cartesian(xlim = c(-100, 10), ylim = c(-30,100)) +
+  coord_cartesian(xlim = c(-60, 10), ylim = c(-30,85)) +
   # geom_text(aes(label = name), vjust = -0.5, size = 3) +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
@@ -51,7 +51,7 @@ Normalized_counts_rlog <- as.data.frame(assay(rld))
 
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
 plotPCA.DESeqTransform(rld, intgroup="Database") +
-  coord_cartesian(xlim = c(-100, 10), ylim = c(-30,100)) +
+  coord_cartesian(xlim = c(-60, 10), ylim = c(-30,85)) +
   # geom_text(aes(label = name), vjust = -0.5, size = 3) +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
@@ -59,8 +59,8 @@ plotPCA.DESeqTransform(rld, intgroup="Database") +
   theme(legend.position = "right")
 # ggsave("plots/PCA_TCGA_BEAT_rlog_removed_DEG.png", device = "png", width = 30, height = 14,
 #        units = "cm", pointsize = 10, dpi = 500)
-ggsave("plots/PCA_TCGA_BEAT_rlog_removed_DEG_zoomIn.png", device = "png", width = 12, height = 12,
-       units = "cm", pointsize = 10, dpi = 500)
+# ggsave("plots/PCA_TCGA_BEAT_rlog_removed_DEG_zoomIn.png", device = "png", width = 12, height = 12,
+#        units = "cm", pointsize = 10, dpi = 500)
 
 
 # rlog Feature Selection =====================================
