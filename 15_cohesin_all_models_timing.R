@@ -3,7 +3,6 @@ source("00_helper_functions.R")
 library(tidyverse)
 library(caret)
 library(lme4)
-library(lmerTest)
 
 
 # Data partition (from here, run on cluster) ================================
