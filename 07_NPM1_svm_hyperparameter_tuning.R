@@ -106,6 +106,23 @@ print(Sys.time() - start_time)
 # saveRDS(svm_rfe, "OutputTables/NPM1_rfe_results_svm_vst_min_max.rds")
 svm_rfe <- readRDS("OutputTables/NPM1_rfe_results_svm_vst_min_max.rds")
 
+# Plot
+results_long <- svm_rfe[["results"]] %>%
+  pivot_longer(cols = c(Accuracy, Kappa), names_to = "Metric", values_to = "Value") %>%
+  pivot_longer(cols = c(AccuracySD, KappaSD), names_to = "MetricSD", values_to = "SD") %>%
+  mutate(Metric = case_when(Metric == "Accuracy" ~ "Accuracy", Metric == "Kappa" ~ "Kappa")) %>%
+  filter((Metric == "Accuracy" & MetricSD == "AccuracySD") | (Metric == "Kappa" & MetricSD == "KappaSD"))
+ggplot(results_long, aes(x = Variables, y = Value, color = Metric, group = Metric))  +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  geom_ribbon(aes(ymin = Value - SD, ymax = Value + SD, fill = Metric), alpha = 0.2, color = NA) +
+  scale_x_reverse() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Number of Features", y = "Score",
+       color = "Performance Metric", fill = "Performance Metric")
+# ggsave("plots/NPM1/NPM1_RFE_results.png", device = "png",
+#        width = 18, height = 12, units = "cm", pointsize = 10, dpi = 500)
 
 # Train final model on RFE-selected features ======================
 selected_features <- predictors(svm_rfe)
