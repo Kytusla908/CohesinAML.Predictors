@@ -22,7 +22,7 @@ rld <- readRDS("OutputTables/TCGA-BEAT_raw_DESeq2_rlog_filterByExpr_byDatabase.r
 # Check PCA
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
 plotPCA.DESeqTransform(rld, intgroup="Database") +
-  coord_cartesian(xlim = c(-60, 10), ylim = c(-30,75)) +
+  # coord_cartesian(xlim = c(-60, 10), ylim = c(-30,75)) +
   # geom_text(aes(label = name), vjust = -0.5, size = 3) +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
@@ -51,7 +51,7 @@ Normalized_counts_rlog <- as.data.frame(assay(rld))
 
 cols <- c("TCGA" = "royalblue", "BEAT" = "gold")
 plotPCA.DESeqTransform(rld, intgroup="Database") +
-  coord_cartesian(xlim = c(-60, 10), ylim = c(-30,70)) +
+  # coord_cartesian(xlim = c(-60, 10), ylim = c(-30,70)) +
   # geom_text(aes(label = name), vjust = -0.5, size = 3) +
   theme(panel.grid.major=element_line(colour="white"), panel.grid.minor=element_line(colour="white")) +
   labs(color="Database:") +
